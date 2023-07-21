@@ -1,4 +1,18 @@
-class JointSinusoidalTrajectoryNode
+//~ Copyright (C) 2023 Łukasz Woliński
+//~ You may use, distribute and modify this code under the terms of the BSD-3-Clause License.
+
+#include <iostream>
+#include <memory>
+#include <string>
+#include <eigen3/Eigen/Dense>
+#include "trajectory_generator/joint_sinusoidal_trajectory.hpp"
+
+#include "rclcpp/rclcpp.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
+
+using std::placeholders::_1;
+
+class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
     JointSinusoidalTrajectoryNode();
@@ -8,7 +22,7 @@ public:
     void positionVelocityAcceleration( double t, Eigen::VectorXd* q, Eigen::VectorXd* dqdt, Eigen::VectorXd* d2qdt2 );
     
 private:
-    JointSinusoidalTrajectory trajectory;
+    rrlib::JointSinusoidalTrajectory trajectory;
     
 };
 
