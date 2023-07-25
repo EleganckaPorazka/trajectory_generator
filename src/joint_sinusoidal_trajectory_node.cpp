@@ -9,6 +9,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
+#include "std_msgs/msg/float64.hpp" //temporary, because deprecated?
 
 using std::placeholders::_1;
 
@@ -16,28 +17,34 @@ class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
     JointSinusoidalTrajectoryNode();
-    JointSinusoidalTrajectoryNode( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max );
-    void setParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max );
-    double getMotionTime();
-    void positionVelocityAcceleration( double t, Eigen::VectorXd* q, Eigen::VectorXd* dqdt, Eigen::VectorXd* d2qdt2 );
+    void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
+    void SetParametersTest();
     
 private:
-    rrlib::JointSinusoidalTrajectory trajectory;
+    void TopicCallback(const std_msgs::msg::Float64 & msg);
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr subscription_;
+    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectoryPoint>::SharedPtr publisher_;
+    
+    rrlib::JointSinusoidalTrajectory trajectory_;
     
 };
 
 JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
+: Node("joint_sinusoidal_trajectory")
 {
+    RCLCPP_INFO(this->get_logger(), "Starting the node.");
+    
+    // create a subscriber for the local time
+    subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&LWRForwardKinematicsNode::TopicCallback, this, _1));
+    // create a publisher for the joint trajectory point
+    publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectoryPoint>("jnt_sin_traj", 10);
+    
+    SetParametersTest();
 }
 
-JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max )
+void JointSinusoidalTrajectoryNode::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
 {
-    setParameters(q_start, q_end, vel_max, acc_max);
-}
-
-void JointSinusoidalTrajectoryNode::setParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max )
-{
-    if (q_start.size() != q_end.size() or vel_max <= 0.0 or acc_max <= 0.0)
+    if (q_start.size() != DOF or q_end.size() != DOF or vel_max <= 0.0 or acc_max <= 0.0)
     {
         std::string message;
         message = "\nParameters are not set. Please, provide the correct values:\n-> q_start and q_end need to be of the same size,\n-> v_max has to be greater than 0,\n-> a max has to be greater than 0.\n";
@@ -45,24 +52,44 @@ void JointSinusoidalTrajectoryNode::setParameters( const Eigen::VectorXd &q_star
         return;
     }
     
-    trajectory.setParameters(q_start, q_end, vel_max, acc_max);
+    trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
 }
 
-double JointSinusoidalTrajectoryNode::getMotionTime()
+void JointSinusoidalTrajectoryNode::SetParametersTest()
 {
-    return trajectory.getMotionTime();
+    /* test function to set the joint trajectory generator parameters */
+    Eigen::VectorXd q_start = Eigen::VectorXd::Zero(7);
+    Eigen::VectorXd q_end;
+    q_end << 0.0, 0.0, 0.0, M_PI/2.0, 0.0, -M_PI/2.0, 0.0;
+    size_t DOF = 7;
+    double vel_max = 100.0 / 180.0 * M_PI;
+    double acc_max = 500.0 / 180.0 * M_PI;
+    trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
 }
 
-void JointSinusoidalTrajectoryNode::positionVelocityAcceleration( double t, Eigen::VectorXd* q, Eigen::VectorXd* dqdt, Eigen::VectorXd* d2qdt2 )
+void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 & msg)
 {
-    if (trajectory.areParametersOK() != true)
-    {
-        std::cout << "The JointSinusoidalTrajectory class parameters are not viable for computing the trajectory.\n";
-        *q = Eigen::VectorXd::Zero( trajectory.getDOF() );
-        *dqdt = Eigen::VectorXd::Zero( trajectory.getDOF() );
-        *d2qdt2 = Eigen::VectorXd::Zero( trajectory.getDOF() );
-        return;
-    }
+    double t = msg.data;
+    Eigen::VectorXd q;
+    Eigen::VectorXd dqdt;
+    Eigen::VectorXd d2qdt2;
+    trajectory_.PositionVelocityAcceleration(t, &q, &dqdt, &d2qdt2);
     
-    trajectory.positionVelocityAcceleration(t, q, dqdt, d2qdt2);
+    // publish the computed joint trajectory point
+    trajectory_msgs::msg::JointTrajectoryPoint response;
+    response.positions = q.data();
+    response.velocities = dqdt.data();
+    response.accelerations = d2qdt2.data();
+    response.time_from_start.sec = (int) floor(t);
+    response.time_from_start.nanosec = (int) (t - floor(t)) * pow(10.0, 9.0); // TODO: check?
+    publisher_->publish(response);
+
+}
+
+int main(int argc, char * argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<JointSinusoidalTrajectoryNode>());
+    rclcpp::shutdown();
+    return 0;
 }

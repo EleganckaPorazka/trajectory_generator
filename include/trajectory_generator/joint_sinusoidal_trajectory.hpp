@@ -14,7 +14,7 @@ class JointSinusoidalTrajectory
 {
 public:
     JointSinusoidalTrajectory();
-    void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max );
+    void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
     bool AreParametersOK();
     double GetMotionTime();
     size_t GetDOF();
@@ -23,7 +23,7 @@ public:
     
 private:
     Eigen::VectorXd q_start_, q_end_;   // start and end points (in radians)
-    size_t DOF_;                        // number of degrees of freedom
+    size_t DOF_;                        // number of degrees of freedom of the joint trajectory
     double vel_max_;                    // maximum velocity: a scalar value, greater than 0 (in rad/s)
     double acc_max_;                    // maximum velocity: a scalar value, greater than 0 (in rad/s^2)
     double t_acc_;                      // acceleration (and deceleration) duration
@@ -44,11 +44,11 @@ JointSinusoidalTrajectory::JointSinusoidalTrajectory()
     PARAMETERS_OK_ = false;
 }
 
-void JointSinusoidalTrajectory::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, double vel_max, double acc_max )
+void JointSinusoidalTrajectory::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
 {
     q_start_ = q_start;
     q_end_ = q_end;
-    DOF_ = q_start_.size();
+    DOF_ = DOF;
     vel_max_ = vel_max;
     acc_max_ = acc_max;
     
