@@ -59,7 +59,7 @@ void JointSinusoidalTrajectoryNode::SetParametersTest()
 {
     /* test function to set the joint trajectory generator parameters */
     Eigen::VectorXd q_start = Eigen::VectorXd::Zero(7);
-    Eigen::VectorXd q_end;
+    Eigen::VectorXd q_end(7);
     q_end << 0.0, 0.0, 0.0, M_PI/2.0, 0.0, -M_PI/2.0, 0.0;
     size_t DOF = 7;
     double vel_max = 100.0 / 180.0 * M_PI;
