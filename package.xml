@@ -6,6 +6,10 @@
   <description>Trajectory generators: joint and Cartesian space.</description>
   <maintainer email="lukasz.wolinski@pw.edu.pl">Lukasz Wolinski</maintainer>
   <license>BSD-3-Clause</license>
+  
+  <depend>rclcpp</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>std_msgs</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
