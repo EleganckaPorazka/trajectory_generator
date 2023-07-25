@@ -84,7 +84,7 @@ void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 &
     std::vector<double> accelerations(d2qdt2.data(), d2qdt2.data() + d2qdt2.size());
     response.accelerations = accelerations;
     response.time_from_start.sec = (int) floor(t);
-    response.time_from_start.nanosec = (int) (t - floor(t)) * pow(10.0, 9.0); // TODO: check?
+    response.time_from_start.nanosec = (int) ( (t - floor(t)) * pow(10.0, 9.0) ); // TODO: more legit way?
     publisher_->publish(response);
 
 }
