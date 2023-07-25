@@ -5,4 +5,4 @@
 
 The `trajectory_generator` package contains functions for computing joint and Cartesian space trajectories.
 
-A work in progress; will not compile right now.
+A work in progress.

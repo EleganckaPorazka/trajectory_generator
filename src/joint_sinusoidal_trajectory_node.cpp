@@ -17,7 +17,7 @@ class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
     JointSinusoidalTrajectoryNode();
-    void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
+    //~ void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
     void SetParametersTest();
     
 private:
@@ -35,25 +35,25 @@ JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
     RCLCPP_INFO(this->get_logger(), "Starting the node.");
     
     // create a subscriber for the local time
-    subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&LWRForwardKinematicsNode::TopicCallback, this, _1));
+    subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&JointSinusoidalTrajectoryNode::TopicCallback, this, _1));
     // create a publisher for the joint trajectory point
     publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectoryPoint>("jnt_sin_traj", 10);
     
     SetParametersTest();
 }
 
-void JointSinusoidalTrajectoryNode::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
-{
-    if (q_start.size() != DOF or q_end.size() != DOF or vel_max <= 0.0 or acc_max <= 0.0)
-    {
-        std::string message;
-        message = "\nParameters are not set. Please, provide the correct values:\n-> q_start and q_end need to be of the same size,\n-> v_max has to be greater than 0,\n-> a max has to be greater than 0.\n";
-        std::cout << message;
-        return;
-    }
+//~ void JointSinusoidalTrajectoryNode::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
+//~ {
+    //~ if (q_start.size() != DOF or q_end.size() != DOF or vel_max <= 0.0 or acc_max <= 0.0)
+    //~ {
+        //~ std::string message;
+        //~ message = "\nParameters are not set. Please, provide the correct values:\n-> q_start and q_end need to be of the same size,\n-> v_max has to be greater than 0,\n-> a max has to be greater than 0.\n";
+        //~ std::cout << message;
+        //~ return;
+    //~ }
     
-    trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
-}
+    //~ trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+//~ }
 
 void JointSinusoidalTrajectoryNode::SetParametersTest()
 {
@@ -77,9 +77,12 @@ void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 &
     
     // publish the computed joint trajectory point
     trajectory_msgs::msg::JointTrajectoryPoint response;
-    response.positions = q.data();
-    response.velocities = dqdt.data();
-    response.accelerations = d2qdt2.data();
+    std::vector<double> positions(q.data(), q.data() + q.size());
+    response.positions = positions;
+    std::vector<double> velocities(dqdt.data(), dqdt.data() + dqdt.size());
+    response.velocities = velocities;
+    std::vector<double> accelerations(d2qdt2.data(), d2qdt2.data() + d2qdt2.size());
+    response.accelerations = accelerations;
     response.time_from_start.sec = (int) floor(t);
     response.time_from_start.nanosec = (int) (t - floor(t)) * pow(10.0, 9.0); // TODO: check?
     publisher_->publish(response);
