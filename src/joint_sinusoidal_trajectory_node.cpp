@@ -9,7 +9,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
-#include "std_msgs/msg/float64.hpp" //temporary, because deprecated?
+#include "std_msgs/msg/float64.hpp" //TODO: temporary, because deprecated? create my own "local_time" message?
 
 using std::placeholders::_1;
 
@@ -69,6 +69,7 @@ void JointSinusoidalTrajectoryNode::SetParametersTest()
 
 void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 & msg)
 {
+    // given the local time t from <0, end_time>, compute the joint positions, velocities, and accelerations (the trajectory point):
     double t = msg.data;
     Eigen::VectorXd q;
     Eigen::VectorXd dqdt;
@@ -86,7 +87,6 @@ void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 &
     response.time_from_start.sec = (int) floor(t);
     response.time_from_start.nanosec = (int) ( (t - floor(t)) * pow(10.0, 9.0) ); // TODO: more legit way?
     publisher_->publish(response);
-
 }
 
 int main(int argc, char * argv[])

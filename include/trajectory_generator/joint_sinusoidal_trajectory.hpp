@@ -28,7 +28,7 @@ private:
     double acc_max_;                    // maximum velocity: a scalar value, greater than 0 (in rad/s^2)
     double t_acc_;                      // acceleration (and deceleration) duration
     double t_end_;                      // motion time
-    bool PARAMETERS_OK_;                // a flag to be set to true if the parameters are viable for the trajectory computation, and false otherwise
+    bool PARAMETERS_OK_;                // a flag to be set to true if the parameters are viable for the trajectory computation, and false otherwise; TODO: is this necessary? remove it?
 };
 
 JointSinusoidalTrajectory::JointSinusoidalTrajectory()
