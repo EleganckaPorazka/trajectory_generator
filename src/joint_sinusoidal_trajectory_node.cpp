@@ -7,18 +7,22 @@
 #include <eigen3/Eigen/Dense>
 #include "trajectory_generator/joint_sinusoidal_trajectory.hpp"
 
+#include "rrlib_interfaces/action/ptp.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 #include "std_msgs/msg/float64.hpp" //TODO: temporary, because deprecated? create my own "local_time" message?
 
 // TODO: Create an action server in this node. Other node sends a request with the start and goal point, and maximum vel and acc.
-// In the for loop, the trajectory is computed and published.
+// In the for loop, the trajectory is computed and published (the function TopicCallback should be repurposed).
+// https://docs.ros.org/en/humble/Tutorials/Intermediate/Writing-an-Action-Server-Client/Cpp.html
 
 using std::placeholders::_1;
 
 class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
+    using PTP = rrlib_interfaces::action::PTP;
     JointSinusoidalTrajectoryNode();
     //~ void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
     void SetParametersTest();
@@ -27,6 +31,7 @@ private:
     void TopicCallback(const std_msgs::msg::Float64 & msg);
     rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr subscription_;
     rclcpp::Publisher<trajectory_msgs::msg::JointTrajectoryPoint>::SharedPtr publisher_;
+    rclcpp_action::Server<PTP>::SharedPtr action_server_;
     
     rrlib::JointSinusoidalTrajectory trajectory_;
     
@@ -43,6 +48,15 @@ JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
     publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectoryPoint>("jnt_sin_traj", 10);
     
     SetParametersTest();
+    
+    using namespace std::placeholders;
+
+    this->action_server_ = rclcpp_action::create_server<PTP>(
+        this,
+        "ptp",
+        std::bind(&JointSinusoidalTrajectoryNode::handle_goal, this, _1, _2),
+        std::bind(&JointSinusoidalTrajectoryNode::handle_cancel, this, _1),
+        std::bind(&JointSinusoidalTrajectoryNode::handle_accepted, this, _1));
 }
 
 //~ void JointSinusoidalTrajectoryNode::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )

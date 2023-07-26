@@ -7,18 +7,22 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rrlib_interfaces REQUIRED)
 
 # headers are in the "include" directory
 include_directories(include)
 
 add_executable(joint_sinusoidal_trajectory src/joint_sinusoidal_trajectory_node.cpp)
-ament_target_dependencies(joint_sinusoidal_trajectory rclcpp trajectory_msgs std_msgs)
+ament_target_dependencies(joint_sinusoidal_trajectory
+  rclcpp
+  rclcpp_action
+  trajectory_msgs
+  std_msgs
+  rrlib_interfaces)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
