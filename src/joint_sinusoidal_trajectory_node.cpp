@@ -11,6 +11,9 @@
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 #include "std_msgs/msg/float64.hpp" //TODO: temporary, because deprecated? create my own "local_time" message?
 
+// TODO: Create an action server in this node. Other node sends a request with the start and goal point, and maximum vel and acc.
+// In the for loop, the trajectory is computed and published.
+
 using std::placeholders::_1;
 
 class JointSinusoidalTrajectoryNode : public rclcpp::Node
