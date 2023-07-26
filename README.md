@@ -13,7 +13,7 @@ It is recommended to use Ubuntu 22.04 with [**ROS 2 Humble**](https://docs.ros.o
 
 ### Required packages
 
-
+[**rrlib_interfaces**](https://github.com/EleganckaPorazka/rrlib_interfaces.git)
 
 ### Building from source
 
@@ -27,6 +27,8 @@ colcon build
 ```
 
 ## Running
+
+Right now this section is not functional anymore. The node is being changed to an action server.
 
 To run the 'joint_sinusoidal_trajectory' node, use the following command:
 ```
