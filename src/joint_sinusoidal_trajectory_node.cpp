@@ -29,7 +29,7 @@ public:
     
 private:
     //~ void TopicCallback(const std_msgs::msg::Float64 & msg);
-    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr subscription_;
+    //~ rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr subscription_;
     rclcpp::Publisher<trajectory_msgs::msg::JointTrajectoryPoint>::SharedPtr publisher_;
     rclcpp_action::Server<PTP>::SharedPtr action_server_;
     
@@ -50,16 +50,15 @@ private:
 JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
 : Node("joint_sinusoidal_trajectory")
 {
-    using std::placeholders;
+    using namespace std::placeholders;
     
     RCLCPP_INFO(this->get_logger(), "Starting the node.");
     
     // create a subscriber for the local time // TODO: remove
-    subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&JointSinusoidalTrajectoryNode::TopicCallback, this, _1));
+    //~ subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&JointSinusoidalTrajectoryNode::TopicCallback, this, _1));
     // create a publisher for the joint trajectory point
     publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectoryPoint>("jnt_sin_traj", 10);
     
-    SetParametersTest();
     // create an action server to handle requests for the joint trajectory generation
     this->action_server_ = rclcpp_action::create_server<PTP>(
         this,
