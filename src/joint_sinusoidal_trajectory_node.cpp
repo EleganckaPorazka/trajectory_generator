@@ -25,7 +25,7 @@ public:
     using GoalHandlePTP = rclcpp_action::ServerGoalHandle<PTP>;
     JointSinusoidalTrajectoryNode();
     //~ void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
-    void SetParametersTest();
+    //~ void SetParametersTest();
     
 private:
     //~ void TopicCallback(const std_msgs::msg::Float64 & msg);
@@ -82,17 +82,17 @@ JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
     //~ trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
 //~ }
 
-void JointSinusoidalTrajectoryNode::SetParametersTest()
-{
-    /* test function to set the joint trajectory generator parameters */
-    Eigen::VectorXd q_start = Eigen::VectorXd::Zero(7);
-    Eigen::VectorXd q_end(7);
-    q_end << 0.0, 0.0, 0.0, M_PI/2.0, 0.0, -M_PI/2.0, 0.0;
-    size_t DOF = 7;
-    double vel_max = 100.0 / 180.0 * M_PI;
-    double acc_max = 500.0 / 180.0 * M_PI;
-    trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
-}
+//~ void JointSinusoidalTrajectoryNode::SetParametersTest()
+//~ {
+    //~ /* test function to set the joint trajectory generator parameters */
+    //~ Eigen::VectorXd q_start = Eigen::VectorXd::Zero(7);
+    //~ Eigen::VectorXd q_end(7);
+    //~ q_end << 0.0, 0.0, 0.0, M_PI/2.0, 0.0, -M_PI/2.0, 0.0;
+    //~ size_t DOF = 7;
+    //~ double vel_max = 100.0 / 180.0 * M_PI;
+    //~ double acc_max = 500.0 / 180.0 * M_PI;
+    //~ trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+//~ }
 
 rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(
     const rclcpp_action::GoalUUID & uuid,
@@ -100,8 +100,38 @@ rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(
 {
     RCLCPP_INFO(this->get_logger(), "Received the PTP motion request");
     (void)uuid;
-    // TODO: Handle setting parameters (and rejecting the goal if the parameters are wrong)
-    // trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+    
+    size_t DOF;
+    Eigen::VectorXd q_start, q_end;
+    double vel_max, acc_max;
+    
+    if (goal->dt <= 0.0 or goal->vel_max <= 0.0 or goal->acc_max <= 0.0)
+    {
+        RCLCPP_INFO(this->get_logger(), "Request rejected. The values of vel_max, acc_max, and dt shall be greater than 0.0.");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
+    else
+    {
+        vel_max = goal->vel_max;
+        acc_max = goal->acc_max;
+        // dt is not assigned to a local variable, because it is not passed to trajectory_.SetParameters function
+        // dt is assigned to a local variable in the Execute function
+    }
+    
+    if (goal->start_position.size() != goal->end_position.size())
+    {
+        RCLCPP_INFO(this->get_logger(), "Request rejected. The vectors q_start and q_end shall have the same size.");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
+    else
+    {
+        DOF = goal->start_position.size();
+        q_start = Eigen::Map<const Eigen::VectorXd, Eigen::Unaligned>(goal->start_position.data(), DOF);
+        q_end = Eigen::Map<const Eigen::VectorXd, Eigen::Unaligned>(goal->end_position.data(), DOF);
+    }
+    
+    trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+    
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
