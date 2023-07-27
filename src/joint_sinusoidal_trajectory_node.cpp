@@ -12,7 +12,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
-#include "std_msgs/msg/float64.hpp" //TODO: temporary, because deprecated? create my own "local_time" message?
+//~ #include "std_msgs/msg/float64.hpp" //TODO: temporary, because deprecated? create my own "local_time" message?
 
 // TODO: Create an action server in this node. Other node sends a request with the start and goal point, and maximum vel and acc.
 // In the for loop, the trajectory is computed and published (the function TopicCallback should be repurposed).
@@ -28,7 +28,7 @@ public:
     void SetParametersTest();
     
 private:
-    void TopicCallback(const std_msgs::msg::Float64 & msg);
+    //~ void TopicCallback(const std_msgs::msg::Float64 & msg);
     rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr subscription_;
     rclcpp::Publisher<trajectory_msgs::msg::JointTrajectoryPoint>::SharedPtr publisher_;
     rclcpp_action::Server<PTP>::SharedPtr action_server_;
@@ -122,34 +122,88 @@ void JointSinusoidalTrajectoryNode::HandleAccepted(const std::shared_ptr<GoalHan
     
 void JointSinusoidalTrajectoryNode::Execute(const std::shared_ptr<GoalHandlePTP> goal_handle)
 {
-    RCLCPP_INFO(this->get_logger(), "Executing goal");
-    rclcpp::Rate loop_rate(1);
+    RCLCPP_INFO(this->get_logger(), "Generating the trajectory.");
     const auto goal = goal_handle->get_goal();
-    auto feedback = std::make_shared<PTP::Feedback>();
+    double dt = goal->dt;                       // time increment
+    double t = 0.0;                             // starting time
+    double t_end = trajectory_.GetMotionTime(); // end time
+    int N = (int) ceil(t_end / dt);             // number of steps
     
+    rclcpp::Rate loop_rate(1.0/dt);
+    auto feedback = std::make_shared<PTP::Feedback>();
+    auto result = std::make_shared<PTP::Result>();
+
+    for (int k = 1; (k < N) && rclcpp::ok(); ++k)
+    {
+        // Check if there is a cancel request
+        if (goal_handle->is_canceling())
+        {
+            result->success = false;
+            result->message = "Trajectory cancelled.";
+            goal_handle->canceled(result);
+            RCLCPP_INFO(this->get_logger(), "Goal canceled.");
+            return;
+        }
+        
+        // compute the joint positions, velocities, and accelerations (the trajectory point):
+        Eigen::VectorXd q;
+        Eigen::VectorXd dqdt;
+        Eigen::VectorXd d2qdt2;
+        trajectory_.PositionVelocityAcceleration(t, &q, &dqdt, &d2qdt2);
+        
+        // publish the computed joint trajectory point
+        trajectory_msgs::msg::JointTrajectoryPoint response;
+        std::vector<double> positions(q.data(), q.data() + q.size());
+        response.positions = positions;
+        std::vector<double> velocities(dqdt.data(), dqdt.data() + dqdt.size());
+        response.velocities = velocities;
+        std::vector<double> accelerations(d2qdt2.data(), d2qdt2.data() + d2qdt2.size());
+        response.accelerations = accelerations;
+        response.time_from_start.sec = (int) floor(t);
+        response.time_from_start.nanosec = (int) ( (t - floor(t)) * pow(10.0, 9.0) ); // TODO: more legit way?
+        publisher_->publish(response);
+        
+        // Publish feedback
+        feedback->percent_complete = t / trajectory_.GetMotionTime() * 100.0;
+        goal_handle->publish_feedback(feedback);
+        //~ RCLCPP_INFO(this->get_logger(), "Publish feedback.");
+        
+        t += dt;
+
+        loop_rate.sleep();
+    }
+
+    // Check if goal is done
+    if (rclcpp::ok())
+    {
+        result->success = true;
+        result->message = "Trajectory finished.";
+        goal_handle->succeed(result);
+        RCLCPP_INFO(this->get_logger(), "Goal succeeded.");
+    }
 }
 
-void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 & msg)
-{
-    // given the local time t from <0, end_time>, compute the joint positions, velocities, and accelerations (the trajectory point):
-    double t = msg.data;
-    Eigen::VectorXd q;
-    Eigen::VectorXd dqdt;
-    Eigen::VectorXd d2qdt2;
-    trajectory_.PositionVelocityAcceleration(t, &q, &dqdt, &d2qdt2);
+//~ void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 & msg)
+//~ {
+    //~ // given the local time t from <0, end_time>, compute the joint positions, velocities, and accelerations (the trajectory point):
+    //~ double t = msg.data;
+    //~ Eigen::VectorXd q;
+    //~ Eigen::VectorXd dqdt;
+    //~ Eigen::VectorXd d2qdt2;
+    //~ trajectory_.PositionVelocityAcceleration(t, &q, &dqdt, &d2qdt2);
     
-    // publish the computed joint trajectory point
-    trajectory_msgs::msg::JointTrajectoryPoint response;
-    std::vector<double> positions(q.data(), q.data() + q.size());
-    response.positions = positions;
-    std::vector<double> velocities(dqdt.data(), dqdt.data() + dqdt.size());
-    response.velocities = velocities;
-    std::vector<double> accelerations(d2qdt2.data(), d2qdt2.data() + d2qdt2.size());
-    response.accelerations = accelerations;
-    response.time_from_start.sec = (int) floor(t);
-    response.time_from_start.nanosec = (int) ( (t - floor(t)) * pow(10.0, 9.0) ); // TODO: more legit way?
-    publisher_->publish(response);
-}
+    //~ // publish the computed joint trajectory point
+    //~ trajectory_msgs::msg::JointTrajectoryPoint response;
+    //~ std::vector<double> positions(q.data(), q.data() + q.size());
+    //~ response.positions = positions;
+    //~ std::vector<double> velocities(dqdt.data(), dqdt.data() + dqdt.size());
+    //~ response.velocities = velocities;
+    //~ std::vector<double> accelerations(d2qdt2.data(), d2qdt2.data() + d2qdt2.size());
+    //~ response.accelerations = accelerations;
+    //~ response.time_from_start.sec = (int) floor(t);
+    //~ response.time_from_start.nanosec = (int) ( (t - floor(t)) * pow(10.0, 9.0) ); // TODO: more legit way?
+    //~ publisher_->publish(response);
+//~ }
 
 int main(int argc, char * argv[])
 {
