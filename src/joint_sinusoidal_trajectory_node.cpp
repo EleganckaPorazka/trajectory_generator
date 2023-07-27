@@ -120,13 +120,13 @@ void JointSinusoidalTrajectoryNode::Execute(const std::shared_ptr<GoalHandlePTP>
     double dt = goal->dt;                       // time increment
     double t = 0.0;                             // starting time
     double t_end = trajectory_.GetMotionTime(); // end time
-    int N = (int) ceil(t_end / dt);             // number of steps
+    int N = (int) ceil(t_end / dt) + 1;         // number of steps
     
     rclcpp::Rate loop_rate(1.0/dt);
     auto feedback = std::make_shared<PTP::Feedback>();
     auto result = std::make_shared<PTP::Result>();
 
-    for (int k = 1; (k < N) && rclcpp::ok(); ++k)
+    for (int k = 0; (k < N) && rclcpp::ok(); ++k)
     {
         // Check if there is a cancel request
         if (goal_handle->is_canceling())
@@ -157,7 +157,7 @@ void JointSinusoidalTrajectoryNode::Execute(const std::shared_ptr<GoalHandlePTP>
         publisher_->publish(response);
         
         // Publish feedback
-        feedback->percent_complete = t / trajectory_.GetMotionTime() * 100.0;
+        feedback->percent_complete = ((double) k) / ((double) (N - 1)) * 100.0;
         goal_handle->publish_feedback(feedback);
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Trajectory percent complete: %lf", feedback->percent_complete);
         

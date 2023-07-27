@@ -28,22 +28,29 @@ colcon build
 
 ## Running
 
-Right now this section is not functional anymore. The node is being changed to an action server.
-
 To run the 'joint_sinusoidal_trajectory' node, use the following command:
 ```
 ros2 run trajectory_generator joint_sinusoidal_trajectory 
 ```
 
-To send the time from <0, end_time>:
+To send the joint trajectory generation request:
 ```
-ros2 topic pub --once /jnt_sin_local_time std_msgs/msg/Float64 "{data: x}"
+ros2 action send_goal /ptp_motion rrlib_interfaces/action/PTP "{start_position: [x1,x2,...xn], end_position: [y1,y2,...,yn], vel_max: v, acc_max: a, dt: d}"
+
 ```
-where 'x' is the value in seconds.
+where the 'start_position' and 'end_position' are vectors in radians, 'v' is the max velocity in rad/s, 'a' is the max acceleration in rad/s^2, and 'd' is the time step in seconds.
 
 Listen to what is computed:
 ```
 ros2 topic echo /jnt_sin_traj
 ```
 
+Get the action status:
+```
+ros2 topic echo /ptp_motion/_action/status
+```
 
+Get the feedback:
+```
+ros2 topic echo /ptp_motion/_action/feedback
+```
