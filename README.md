@@ -54,3 +54,7 @@ Get the feedback:
 ```
 ros2 topic echo /ptp_motion/_action/feedback
 ```
+
+## Notes
+
+This code is also uploaded to [**my other repository**](https://gitlab.com/lwolinski/trajectory_generator.git).
