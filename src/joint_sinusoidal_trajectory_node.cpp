@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <thread>
 #include <string>
 #include <eigen3/Eigen/Dense>
 #include "trajectory_generator/joint_sinusoidal_trajectory.hpp"
@@ -17,12 +18,11 @@
 // In the for loop, the trajectory is computed and published (the function TopicCallback should be repurposed).
 // https://docs.ros.org/en/humble/Tutorials/Intermediate/Writing-an-Action-Server-Client/Cpp.html
 
-using std::placeholders::_1;
-
 class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
     using PTP = rrlib_interfaces::action::PTP;
+    using GoalHandlePTP = rclcpp_action::ServerGoalHandle<PTP>;
     JointSinusoidalTrajectoryNode();
     //~ void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
     void SetParametersTest();
@@ -35,28 +35,38 @@ private:
     
     rrlib::JointSinusoidalTrajectory trajectory_;
     
+    rclcpp_action::GoalResponse HandleGoal(
+        const rclcpp_action::GoalUUID & uuid,
+        std::shared_ptr<const PTP::Goal> goal);
+        
+    rclcpp_action::CancelResponse HandleCancel(
+        const std::shared_ptr<GoalHandlePTP> goal_handle);
+    
+    void HandleAccepted(const std::shared_ptr<GoalHandlePTP> goal_handle);
+    
+    void Execute(const std::shared_ptr<GoalHandlePTP> goal_handle);
 };
 
 JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
 : Node("joint_sinusoidal_trajectory")
 {
+    using std::placeholders;
+    
     RCLCPP_INFO(this->get_logger(), "Starting the node.");
     
-    // create a subscriber for the local time
+    // create a subscriber for the local time // TODO: remove
     subscription_ = this->create_subscription<std_msgs::msg::Float64>("jnt_sin_local_time", 10, std::bind(&JointSinusoidalTrajectoryNode::TopicCallback, this, _1));
     // create a publisher for the joint trajectory point
     publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectoryPoint>("jnt_sin_traj", 10);
     
     SetParametersTest();
-    
-    using namespace std::placeholders;
-
+    // create an action server to handle requests for the joint trajectory generation
     this->action_server_ = rclcpp_action::create_server<PTP>(
         this,
-        "ptp",
-        std::bind(&JointSinusoidalTrajectoryNode::handle_goal, this, _1, _2),
-        std::bind(&JointSinusoidalTrajectoryNode::handle_cancel, this, _1),
-        std::bind(&JointSinusoidalTrajectoryNode::handle_accepted, this, _1));
+        "ptp_motion",
+        std::bind(&JointSinusoidalTrajectoryNode::HandleGoal, this, _1, _2),
+        std::bind(&JointSinusoidalTrajectoryNode::HandleCancel, this, _1),
+        std::bind(&JointSinusoidalTrajectoryNode::HandleAccepted, this, _1));
 }
 
 //~ void JointSinusoidalTrajectoryNode::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
@@ -82,6 +92,41 @@ void JointSinusoidalTrajectoryNode::SetParametersTest()
     double vel_max = 100.0 / 180.0 * M_PI;
     double acc_max = 500.0 / 180.0 * M_PI;
     trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+}
+
+rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const PTP::Goal> goal)
+{
+    RCLCPP_INFO(this->get_logger(), "Received the PTP motion request");
+    (void)uuid;
+    // TODO: Handle setting parameters (and rejecting the goal if the parameters are wrong)
+    // trajectory_.SetParameters(q_start, q_end, DOF, vel_max, acc_max);
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse JointSinusoidalTrajectoryNode::HandleCancel(
+    const std::shared_ptr<GoalHandlePTP> goal_handle)
+{
+    RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+void JointSinusoidalTrajectoryNode::HandleAccepted(const std::shared_ptr<GoalHandlePTP> goal_handle)
+{
+    using namespace std::placeholders;
+    // according to the tutorial, the callback for accepting the goal needs to return quickly to avoid blocking the executor, therefore a new thread is required
+    std::thread{std::bind(&JointSinusoidalTrajectoryNode::Execute, this, _1), goal_handle}.detach();
+}
+    
+void JointSinusoidalTrajectoryNode::Execute(const std::shared_ptr<GoalHandlePTP> goal_handle)
+{
+    RCLCPP_INFO(this->get_logger(), "Executing goal");
+    rclcpp::Rate loop_rate(1);
+    const auto goal = goal_handle->get_goal();
+    auto feedback = std::make_shared<PTP::Feedback>();
+    
 }
 
 void JointSinusoidalTrajectoryNode::TopicCallback(const std_msgs::msg::Float64 & msg)
