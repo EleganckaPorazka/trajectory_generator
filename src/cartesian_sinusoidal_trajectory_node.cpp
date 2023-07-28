@@ -63,6 +63,7 @@ rclcpp_action::GoalResponse CartesianSinusoidalTrajectoryNode::HandleGoal(const 
     
     //TODO: goal->motion_type was supposed to be a string, but it doesn't read the input text into a string?
     //RCLCPP_INFO(this->get_logger(), "I see: %s", goal->motion_type);
+    //goal->motion_type = "LIN"; doesn't work either
     
     /*if (goal->motion_type != "LIN" or goal->motion_type != "CIRC")
     {
