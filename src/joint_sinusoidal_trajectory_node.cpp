@@ -13,6 +13,8 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
+namespace rrlib
+{
 class JointSinusoidalTrajectoryNode : public rclcpp::Node
 {
 public:
@@ -24,14 +26,11 @@ private:
     rclcpp::Publisher<trajectory_msgs::msg::JointTrajectoryPoint>::SharedPtr publisher_;
     rclcpp_action::Server<PTP>::SharedPtr action_server_;
     
-    rrlib::JointSinusoidalTrajectory trajectory_;
+    JointSinusoidalTrajectory trajectory_;
     
-    rclcpp_action::GoalResponse HandleGoal(
-        const rclcpp_action::GoalUUID & uuid,
-        std::shared_ptr<const PTP::Goal> goal);
+    rclcpp_action::GoalResponse HandleGoal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const PTP::Goal> goal);
         
-    rclcpp_action::CancelResponse HandleCancel(
-        const std::shared_ptr<GoalHandlePTP> goal_handle);
+    rclcpp_action::CancelResponse HandleCancel(const std::shared_ptr<GoalHandlePTP> goal_handle);
     
     void HandleAccepted(const std::shared_ptr<GoalHandlePTP> goal_handle);
     
@@ -57,9 +56,7 @@ JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
         std::bind(&JointSinusoidalTrajectoryNode::HandleAccepted, this, _1));
 }
 
-rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(
-    const rclcpp_action::GoalUUID & uuid,
-    std::shared_ptr<const PTP::Goal> goal)
+rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const PTP::Goal> goal)
 {
     RCLCPP_INFO(this->get_logger(), "Received the PTP motion request");
     (void)uuid;
@@ -98,8 +95,7 @@ rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
-rclcpp_action::CancelResponse JointSinusoidalTrajectoryNode::HandleCancel(
-    const std::shared_ptr<GoalHandlePTP> goal_handle)
+rclcpp_action::CancelResponse JointSinusoidalTrajectoryNode::HandleCancel(const std::shared_ptr<GoalHandlePTP> goal_handle)
 {
     RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
     (void)goal_handle;
@@ -176,10 +172,12 @@ void JointSinusoidalTrajectoryNode::Execute(const std::shared_ptr<GoalHandlePTP>
     }
 }
 
+} // namespace rrlib
+
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<JointSinusoidalTrajectoryNode>());
+    rclcpp::spin(std::make_shared<rrlib::JointSinusoidalTrajectoryNode>());
     rclcpp::shutdown();
     return 0;
 }

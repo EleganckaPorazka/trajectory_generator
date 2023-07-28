@@ -10,7 +10,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(trajectory_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(rrlib_interfaces REQUIRED)
 
 # headers are in the "include" directory
@@ -21,7 +20,6 @@ ament_target_dependencies(joint_sinusoidal_trajectory
   rclcpp
   rclcpp_action
   trajectory_msgs
-  std_msgs
   rrlib_interfaces)
 
 if(BUILD_TESTING)

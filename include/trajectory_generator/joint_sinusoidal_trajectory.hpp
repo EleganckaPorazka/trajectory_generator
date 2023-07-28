@@ -15,7 +15,6 @@ class JointSinusoidalTrajectory
 public:
     JointSinusoidalTrajectory();
     void SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max );
-    bool AreParametersOK();
     double GetMotionTime();
     size_t GetDOF();
     void MotionProfile( double t, double* u, double* dudt, double* d2udt2 );
@@ -28,7 +27,6 @@ private:
     double acc_max_;                    // maximum velocity: a scalar value, greater than 0 (in rad/s^2)
     double t_acc_;                      // acceleration (and deceleration) duration
     double t_end_;                      // motion time
-    bool PARAMETERS_OK_;                // a flag to be set to true if the parameters are viable for the trajectory computation, and false otherwise; TODO: is this necessary? remove it?
 };
 
 JointSinusoidalTrajectory::JointSinusoidalTrajectory()
@@ -41,7 +39,6 @@ JointSinusoidalTrajectory::JointSinusoidalTrajectory()
     acc_max_ = 0.0;
     t_acc_ = 0.0;
     t_end_ = 0.0;
-    PARAMETERS_OK_ = false;
 }
 
 void JointSinusoidalTrajectory::SetParameters( const Eigen::VectorXd &q_start, const Eigen::VectorXd &q_end, size_t DOF, double vel_max, double acc_max )
@@ -84,13 +81,6 @@ void JointSinusoidalTrajectory::SetParameters( const Eigen::VectorXd &q_start, c
     }
     
     t_end_ = t_end_temp.maxCoeff();
-    
-    PARAMETERS_OK_ = true;
-}
-
-bool JointSinusoidalTrajectory::AreParametersOK()
-{
-    return PARAMETERS_OK_;
 }
 
 double JointSinusoidalTrajectory::GetMotionTime()
