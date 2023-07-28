@@ -61,11 +61,15 @@ rclcpp_action::GoalResponse CartesianSinusoidalTrajectoryNode::HandleGoal(const 
     RCLCPP_INFO(this->get_logger(), "Received the Cartesian space motion request.");
     (void)uuid;
     
-    if (goal->motion_type != "LIN" or goal->motion_type != "CIRC")
+    //TODO: goal->motion_type was supposed to be a string, but it doesn't read the input text into a string?
+    //RCLCPP_INFO(this->get_logger(), "I see: %s", goal->motion_type);
+    
+    /*if (goal->motion_type != "LIN" or goal->motion_type != "CIRC")
     {
         RCLCPP_INFO(this->get_logger(), "Request rejected. The supported motion types are 'LIN' and 'CIRC'.");
         return rclcpp_action::GoalResponse::REJECT;
-    }
+    }*/
+    
     
     double vel_max, acc_max;
     if (goal->dt <= 0.0 or goal->vel_max <= 0.0 or goal->acc_max <= 0.0)
@@ -102,7 +106,7 @@ rclcpp_action::GoalResponse CartesianSinusoidalTrajectoryNode::HandleGoal(const 
         x_end = Eigen::Map<const Eigen::VectorXd, Eigen::Unaligned>(goal->end_pose.data(), 7);
     }
     
-    if (goal->motion_type == "LIN")
+    /*if (goal->motion_type == "LIN")
     {
         x_aux = Eigen::VectorXd::Zero(7); // in LIN motion we will not use it, but initialize it to zeros just in case
         trajectory_.SetParameters(x_start, x_end, vel_max, acc_max);
@@ -121,7 +125,8 @@ rclcpp_action::GoalResponse CartesianSinusoidalTrajectoryNode::HandleGoal(const 
         trajectory_.SetParameters(x_start, x_end, vel_max, acc_max);
         //TODO:
         //trajectory_.SetParameters(x_start, x_end, x_aux, vel_max, acc_max);
-    }
+    }*/
+    trajectory_.SetParameters(x_start, x_end, vel_max, acc_max);//TODO:temporary
     
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
