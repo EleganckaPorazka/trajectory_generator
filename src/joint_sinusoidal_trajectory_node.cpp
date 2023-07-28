@@ -58,7 +58,7 @@ JointSinusoidalTrajectoryNode::JointSinusoidalTrajectoryNode()
 
 rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const PTP::Goal> goal)
 {
-    RCLCPP_INFO(this->get_logger(), "Received the PTP motion request");
+    RCLCPP_INFO(this->get_logger(), "Received the PTP motion request.");
     (void)uuid;
     
     size_t DOF;
@@ -97,7 +97,7 @@ rclcpp_action::GoalResponse JointSinusoidalTrajectoryNode::HandleGoal(const rclc
 
 rclcpp_action::CancelResponse JointSinusoidalTrajectoryNode::HandleCancel(const std::shared_ptr<GoalHandlePTP> goal_handle)
 {
-    RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+    RCLCPP_INFO(this->get_logger(), "Received request to cancel goal.");
     (void)goal_handle;
     return rclcpp_action::CancelResponse::ACCEPT;
 }
