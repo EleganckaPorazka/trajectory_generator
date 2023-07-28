@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 #include <eigen3/Eigen/Dense>
-#include "helper_functions.h"
+#include "helper_functions.hpp"
 
 // TODO: (1) end effector orientation change, (2) circular trajectory
 
@@ -116,7 +116,7 @@ void CartesianSinusoidalTrajectory::PositionVelocityAcceleration( double t, Eige
 {
     double u, dudt, d2udt2;
     
-    motionProfile(t, &u, &dudt, &d2udt2);
+    MotionProfile(t, &u, &dudt, &d2udt2);
     
     Eigen::Vector3d position, trans_vel, trans_acc, rot_vel, rot_acc;
     Eigen::Vector4d orientation;

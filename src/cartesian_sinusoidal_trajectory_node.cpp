@@ -9,7 +9,7 @@
 #include "trajectory_generator/cartesian_sinusoidal_trajectory.hpp"
 
 #include "rrlib_interfaces/action/cart.hpp"
-#include "rrlib_interfaces/cartesian_trajectory_point.hpp"
+#include "rrlib_interfaces/msg/cartesian_trajectory_point.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
@@ -51,9 +51,9 @@ CartesianSinusoidalTrajectoryNode::CartesianSinusoidalTrajectoryNode()
     this->action_server_ = rclcpp_action::create_server<CART>(
         this,
         "cartesian_motion",
-        std::bind(&JointSinusoidalTrajectoryNode::HandleGoal, this, _1, _2),
-        std::bind(&JointSinusoidalTrajectoryNode::HandleCancel, this, _1),
-        std::bind(&JointSinusoidalTrajectoryNode::HandleAccepted, this, _1));
+        std::bind(&CartesianSinusoidalTrajectoryNode::HandleGoal, this, _1, _2),
+        std::bind(&CartesianSinusoidalTrajectoryNode::HandleCancel, this, _1),
+        std::bind(&CartesianSinusoidalTrajectoryNode::HandleAccepted, this, _1));
 }
 
 rclcpp_action::GoalResponse CartesianSinusoidalTrajectoryNode::HandleGoal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const CART::Goal> goal)

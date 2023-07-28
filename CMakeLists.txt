@@ -22,6 +22,13 @@ ament_target_dependencies(joint_sinusoidal_trajectory
   trajectory_msgs
   rrlib_interfaces)
 
+add_executable(cartesian_sinusoidal_trajectory src/cartesian_sinusoidal_trajectory_node.cpp)
+ament_target_dependencies(cartesian_sinusoidal_trajectory
+  rclcpp
+  rclcpp_action
+  trajectory_msgs
+  rrlib_interfaces)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -36,6 +43,7 @@ endif()
 
 install(TARGETS
   joint_sinusoidal_trajectory
+  cartesian_sinusoidal_trajectory
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
