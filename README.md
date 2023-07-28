@@ -28,6 +28,8 @@ colcon build
 
 ## Running
 
+### Joint sinusoidal trajectory
+
 To run the 'joint_sinusoidal_trajectory' node, use the following command:
 ```
 ros2 run trajectory_generator joint_sinusoidal_trajectory 
@@ -53,6 +55,35 @@ ros2 topic echo /ptp_motion/_action/status
 Get the feedback:
 ```
 ros2 topic echo /ptp_motion/_action/feedback
+```
+
+### Cartesian sinusoidal trajectory
+
+To run the 'cartesian_sinusoidal_trajectory' node, use the following command:
+```
+ros2 run trajectory_generator cartesian_sinusoidal_trajectory 
+```
+
+To send the Cartesian trajectory generation request:
+```
+ros2 action send_goal /cartesian_motion rrlib_interfaces/action/CART "{motion_type: tp, start_pose: [x1,x2,...xn], end_pose: [y1,y2,...,yn], vel_max: v, acc_max: a, dt: d}"
+
+```
+where 'motion_type' can be either 'LIN' or 'CIRC', the 'start_pose' and 'end_pose' are the 7-element vectors of position (m) and orientation (quaternions), 'v' is the max velocity in m/s, 'a' is the max acceleration in m/s^2, and 'd' is the time step in seconds.
+
+Listen to what is computed:
+```
+ros2 topic echo /cart_sin_traj
+```
+
+Get the action status:
+```
+ros2 topic echo /cartesian_motion/_action/status
+```
+
+Get the feedback:
+```
+ros2 topic echo /cartesian_motion/_action/feedback
 ```
 
 ## Notes
