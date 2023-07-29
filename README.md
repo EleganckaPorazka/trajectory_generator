@@ -88,4 +88,10 @@ ros2 topic echo /cartesian_motion/_action/feedback
 
 ## Notes
 
+TODO: reading motion_type in a goal request. For now, it seems like the input text is not recognized.
+
+TODO: changing orientation
+
+TODO: CIRC motion
+
 This code is also uploaded to [**my other repository**](https://gitlab.com/lwolinski/trajectory_generator.git).
